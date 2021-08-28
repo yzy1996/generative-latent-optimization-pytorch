@@ -1,0 +1,7 @@
+logs/
+*.pyc
+**/__pycache__
+data/
+.vscode/
+*.pdf
+_cache_DDatasetsLSUNbedroomtrainlmdb

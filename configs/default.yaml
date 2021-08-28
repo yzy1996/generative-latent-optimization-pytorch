@@ -1,0 +1,28 @@
+expname: default
+
+device_ids: -1
+
+data:
+  type: lsun
+
+  preload: true
+  
+model:
+  framework: dcgan
+  z_dim: 128
+  loss_type: laplacian
+
+  max_levels: 5
+  k_size: 5
+  sigma: 1
+  n_channels: 3
+  downscale: 2
+
+training:
+  epoch: 50
+  batch_size: 8
+
+  optimizer: adam
+  lr_model: 1
+  lr_z: 10
+
