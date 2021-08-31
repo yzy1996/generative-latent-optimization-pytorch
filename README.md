@@ -13,7 +13,11 @@ This is an **unofficial** pytorch reimplementation of the paper [(GLO) Optimizin
 pip install numpy, scikit-learn, tqdm, addict, argparse, pyyaml, lmdb
 ```
 
-- [LSUN dataset](https://github.com/fyu/lsun)
+
+
+## Datasets
+
+[LSUN dataset](https://github.com/fyu/lsun)
 
 
 

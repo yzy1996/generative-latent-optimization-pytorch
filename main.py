@@ -15,7 +15,7 @@ import yaml
 import argparse
 
 from dataio import get_data
-from models.dcgan import Generator
+from models.generator import Generator
 from losses.laplacian_loss import LapLoss
 
 import utils
