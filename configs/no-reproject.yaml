@@ -1,4 +1,4 @@
-expname: default
+expname: no-reproject
 
 device_ids: -1
 
@@ -9,8 +9,8 @@ data:
   
 model:
   framework: dcgan
-  z_dim: 128
-  loss_type: mse
+  z_dim: 100
+  loss_type: mse # 
 
   max_levels: 5
   k_size: 5
@@ -19,7 +19,7 @@ model:
   downscale: 2
 
 training:
-  epoch: 200
+  epoch: 50
   batch_size: 128
 
   optimizer: adam

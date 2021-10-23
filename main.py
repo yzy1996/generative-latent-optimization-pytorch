@@ -19,8 +19,14 @@ from models.generator import Generator
 from losses.laplacian_loss import LapLoss
 
 import utils
+from torchvision.utils import make_grid
+from PIL import Image
 
 
+def imsave(filename, array):
+    im = Image.fromarray((array * 255).astype(np.uint8))
+    im.save(filename)
+    
 class IndexedDataset(Dataset):
     """ 
     produce (mages, lables, idx)
@@ -48,6 +54,8 @@ def project_to_sphera(x):
     else:
         raise ValueError("cannot recognized x type!")
 
+    # return x
+
 
 def initialize_latent(train_loader, z_dim, mode='random'):
 
@@ -58,7 +66,7 @@ def initialize_latent(train_loader, z_dim, mode='random'):
     if mode == 'pca':
 
         from sklearn.decomposition import PCA
-
+        
         images, _, _ = zip(*[(images, _, _) for images, _, _ in train_loader])
         images_all = torch.cat(images)
         images_all = images_all.reshape(z_num, -1)
@@ -109,6 +117,11 @@ def main(args):
                               shuffle=True,
                               drop_last=True)
 
+    train_dataset.base.length = 100000
+    train_dataset.base.indices = [100000]
+
+    val_loader = torch.utils.data.DataLoader(train_dataset, shuffle=False, batch_size=8*8)
+
     # 根据数据加载模型
     generator = Generator(z_dim).to(device)
 
@@ -134,9 +147,10 @@ def main(args):
         generator.load_state_dict(ckpt['g_state_dict'])
         optimizer.load_state_dict(ckpt['opt_state_dict'])
 
-    # train
-    epoch = 0
+    else:  
+        epoch = 0
 
+    # train
     while epoch < args.training.epoch:
 
         epoch += 1
@@ -170,27 +184,34 @@ def main(args):
         writer.add_scalar('Loss/loss_epoch', np.mean(loss_total), epoch)
 
         # 保存中断点
+
         print('Saving checkpoint...')
-        torch.save({
-            'epoch': epoch,
-            'iter': iter,
-            'loss': loss,
-            'z': z,
-            'g_state_dict': generator.state_dict(),
-            'opt_state_dict': optimizer.state_dict(),
-        }, ckpt_file)
+
+        ckpt_dic = {'epoch': epoch,
+                    'iter': iter,
+                    'loss': loss,
+                    'z': z,
+                    'g_state_dict': generator.state_dict(),
+                    'opt_state_dict': optimizer.state_dict(),
+                    }
+        if epoch % 10 == 0:
+            torch.save(ckpt_dic, ckpt_dir / f'{epoch}.pt')
+        torch.save(ckpt_dic, ckpt_file)
+
+        rec = generator(torch.as_tensor(z[idx]).float().to(device))
+        imsave(f'{img_dir}/fake_{epoch}.png', make_grid(rec.data.cpu() / 2. + 0.5, nrow=8).numpy().transpose(1, 2, 0))
+        imsave(f'{img_dir}/real{epoch}.png', make_grid(images.data.cpu() / 2. + 0.5, nrow=8).numpy().transpose(1, 2, 0))
+
 
     torch.cuda.empty_cache()
-
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str,
-                        default='configs/default.yaml', help='Path to config file.')
+    parser.add_argument('--configs', type=str, default='configs/default.yaml', help='Path to config file.')
     args, unknown = parser.parse_known_args()
 
-    with open(args.config, encoding='utf8') as yaml_file:
+    with open(args.configs, encoding='utf8') as yaml_file:
         configs_dict = yaml.load(yaml_file, Loader=yaml.FullLoader)
         configs = addict.Dict(configs_dict)
 
