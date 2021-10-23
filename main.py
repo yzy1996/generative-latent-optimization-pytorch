@@ -221,6 +221,7 @@ def main(args):
                     'opt_AE_state_dict': optimizer_AE.state_dict(),
                     'opt_D_state_dict': optimizer_D.state_dict()
                     }
+                    
         if epoch % 10 == 0:
             torch.save(ckpt_dic, ckpt_dir / f'{epoch}.pt')
         torch.save(ckpt_dic, ckpt_file)
