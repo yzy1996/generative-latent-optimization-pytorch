@@ -16,7 +16,9 @@ import argparse
 
 from dataio import get_data
 from models.generator import Generator
+from models.discriminator import Discriminator
 from losses.laplacian_loss import LapLoss
+from losses.loss_functions import gan_losses_fn
 
 import utils
 from torchvision.utils import make_grid
@@ -124,15 +126,21 @@ def main(args):
 
     # 根据数据加载模型
     generator = Generator(z_dim).to(device)
+    discriminator = Discriminator(z_dim).to(device)
 
     z = initialize_latent(train_loader, z_dim)
     zi = torch.zeros((batch_size, z_dim)).to(device).requires_grad_()
 
-    optimizer = optim.SGD([{'params': generator.parameters(), 'lr': args.training.lr_model},
+
+
+    optimizer_AE = optim.SGD([{'params': generator.parameters(), 'lr': args.training.lr_model},
                            {'params': zi, 'lr': args.training.lr_z}])
+    optimizer_D = optim.SGD(discriminator.parameters(), lr=args.training.lr_d, momentum=0)
 
     # loss function
     loss_fn = LapLoss(**configs.model) if args.model.loss_type == 'laplacian' else nn.MSELoss()
+
+    g_loss_fn, d_loss_fn = gan_losses_fn(mode=args.model.gan_type)
 
     # 加载 checkpoints
     ckpt_file = ckpt_dir / 'latest.pt'
@@ -145,7 +153,8 @@ def main(args):
         loss = ckpt['loss']
         z = ckpt['z']
         generator.load_state_dict(ckpt['g_state_dict'])
-        optimizer.load_state_dict(ckpt['opt_state_dict'])
+        optimizer_AE.load_state_dict(ckpt['opt_AE_state_dict'],
+        optimizer_D.load_state_dict(ckpt['opt_D_state_dict']))
 
     else:  
         epoch = 0
@@ -157,12 +166,16 @@ def main(args):
         loss_total = []
 
         with tqdm(train_loader, desc=f'Epoch {epoch}/{args.training.epoch}') as pbar:
+
             for i, (images, _, idx) in enumerate(pbar):
 
                 iter += 1
                 idx = idx.numpy()
 
-                optimizer.zero_grad()
+                # ---------------------
+                #  Train AutoDecoder
+                # ---------------------
+                optimizer_AE.zero_grad()
 
                 real_images = images.to(device)
 
@@ -173,13 +186,26 @@ def main(args):
                 loss_total.append(loss.item())
 
                 loss.backward()
-                optimizer.step()
+                optimizer_AE.step()
+
+                # ---------------------
+                #  Train Discriminator
+                # ---------------------
+
+                optimizer_D.zero_grad()
+                real_output = discriminator(real_images)
+                fake_output = discriminator(fake_images.detach())
+                d_loss = d_loss_fn(real_output, fake_output)
+                d_loss.backward()
+                optimizer_D.step()
+
 
                 z[idx] = project_to_sphera(zi.detach().cpu().numpy())
 
-                pbar.set_postfix(loss=loss.item())
+                pbar.set_postfix(loss=loss.item(), loss_D=d_loss.item())
 
-                writer.add_scalar('Loss/loss_iteration', loss, iter)
+                writer.add_scalar('Loss/loss_AE_iteration', loss, iter)
+                writer.add_scalar('Loss/loss_D_iteration', d_loss, iter)
 
         writer.add_scalar('Loss/loss_epoch', np.mean(loss_total), epoch)
 
@@ -192,7 +218,8 @@ def main(args):
                     'loss': loss,
                     'z': z,
                     'g_state_dict': generator.state_dict(),
-                    'opt_state_dict': optimizer.state_dict(),
+                    'opt_AE_state_dict': optimizer_AE.state_dict(),
+                    'opt_D_state_dict': optimizer_D.state_dict()
                     }
         if epoch % 10 == 0:
             torch.save(ckpt_dic, ckpt_dir / f'{epoch}.pt')
