@@ -7,7 +7,7 @@ import argparse
 from pathlib import Path
 import numpy as np
 
-from models.dcgan import Generator
+from models.generator import Generator
 from torchvision.utils import make_grid
 from PIL import Image
 
@@ -36,21 +36,21 @@ def main(args):
     generator = Generator(args.model.z_dim)
     generator.load_state_dict(ckpt['g_state_dict'])
 
+
     generator.eval()
 
-    new_sample_z = torch.randn(16, args.model.z_dim, 1, 1)
-    inter_z = (z[0:15] + z[1000:1015]) / 2 
+    new_sample_z = torch.randn(128, args.model.z_dim, 1, 1)
+    inter_z = (z[0:127] + z[1000:1127]) / 2 
     inter_z = torch.as_tensor(inter_z).float()
-    new_sample_z = project_to_sphera(new_sample_z)
-    inter_z = project_to_sphera(inter_z)
+    # new_sample_z = project_to_sphera(new_sample_z)
+    # inter_z = project_to_sphera(inter_z)
 
     with torch.no_grad():
         rec1 = generator(new_sample_z)
         rec2 = generator(inter_z)
 
-
-    imsave(f'new_sample-reproject12.png', make_grid(rec1.data.cpu() / 2. + 0.5, nrow=4).numpy().transpose(1, 2, 0))
-    imsave(f'inter-reproject12.png', make_grid(rec2.data.cpu() / 2. + 0.5, nrow=16).numpy().transpose(1, 2, 0))
+    imsave(f'{args.expname}-new_sample.png', make_grid(rec1.data.cpu() / 2. + 0.5, nrow=8).numpy().transpose(1, 2, 0))
+    imsave(f'{args.expname}-inter.png', make_grid(rec2.data.cpu() / 2. + 0.5, nrow=8).numpy().transpose(1, 2, 0))
 
     # imsave(f'new_sample-reproject2.png', make_grid(rec.data.cpu() / 2. + 0.5, nrow=1).numpy().transpose(1, 2, 0))
 
