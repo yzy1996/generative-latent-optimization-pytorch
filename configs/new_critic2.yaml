@@ -1,0 +1,29 @@
+expname: new_critic2
+
+device_ids: -1
+
+data:
+  type: lsun
+
+  preload: true
+  
+model:
+  framework: dcgan
+  z_dim: 128
+  loss_type: mse
+
+  max_levels: 5
+  k_size: 5
+  sigma: 1
+  n_channels: 3
+  downscale: 2
+
+training:
+  epoch: 200
+  batch_size: 128
+
+  optimizer: adam
+  lr_model: 1
+  lr_d: 0.01
+  lr_z: 10
+
