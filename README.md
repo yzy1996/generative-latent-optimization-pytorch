@@ -29,6 +29,12 @@ python main.py --config configs/default.yaml
 
 If you need to set new configs,  just modify the `configs` folder. You can change the `default.yaml` or add new `xx.yaml` files.
 
+## Tricks
+
+- Initialization of the latent vectors with PCA is very crucial.
+- For Laplacian pyramid, we use 3 levels.
+- For latent space dimension, we use 128.
+
 ## Example Results
 
 ![fake_200](https://raw.githubusercontent.com/yzy1996/Image-Hosting/master/20211023211240.png)

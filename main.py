@@ -156,8 +156,7 @@ def main(args):
         optimizer_AE.load_state_dict(ckpt['opt_AE_state_dict'],
         optimizer_D.load_state_dict(ckpt['opt_D_state_dict']))
 
-    else:  
-        epoch = 0
+    Xi_val, _, idx_val = next(iter(val_loader))
 
     # train
     while epoch < args.training.epoch:
@@ -237,7 +236,7 @@ def main(args):
 
         generator.eval()
         with torch.no_grad():
-            rec = generator(torch.as_tensor(z[idx]).float().to(device))
+            rec = generator(torch.as_tensor(z[idx_val.numpy()]).float().to(device))
             imsave(f'{img_dir}/fake_{epoch}.png', make_grid(rec.data.cpu() / 2. + 0.5, nrow=8).numpy().transpose(1, 2, 0))
             # imsave(f'{img_dir}/real{epoch}.png', make_grid(images.data.cpu() / 2. + 0.5, nrow=8).numpy().transpose(1, 2, 0))
 

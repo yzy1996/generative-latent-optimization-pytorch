@@ -26,3 +26,7 @@ training:
   lr_model: 1
   lr_z: 10
 
+  lr_d: 0.001
+  lamb: 0.2
+  reproject: true
+  
