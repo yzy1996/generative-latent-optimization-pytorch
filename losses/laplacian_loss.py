@@ -53,12 +53,14 @@ class LapLoss(nn.Module):
         pyr_input = laplacian_pyramid(input, self.max_levels, self.k_size, self.sigma, self.n_channels, self.downscale)
         pyr_target = laplacian_pyramid(target, self.max_levels, self.k_size, self.sigma, self.n_channels, self.downscale)
 
-        loss = 0
-        for j, (i, t) in enumerate(zip(pyr_input, pyr_target)): 
-            wt = 2 ** (-2 * j)
-            loss += wt * torch.mean(torch.abs(i - t))
+        # loss = 0
+        # for j, (i, t) in enumerate(zip(pyr_input, pyr_target)): 
+            # wt = 2 ** (-2 * j)
+            # loss += wt * torch.mean(torch.abs(i - t))
 
-        return loss
+        # return loss
+        
+        return sum(2**(-2*i) * F.l1_loss(a, b) for i, (a, b) in enumerate(zip(pyr_input, pyr_target)))
 
 
 if __name__ == '__main__':
