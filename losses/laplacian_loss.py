@@ -15,7 +15,6 @@ def gaussian_conv(img, k_size=5, sigma=1, n_channels=3):
     kernel /= kernel.sum()
 
     # 将高斯核转化为卷积核权重
-    n_channels = img.size()[1]
     weight = torch.as_tensor(kernel).float()
     weight = weight.expand(n_channels, 1, -1, -1).to(img.device)
 
@@ -41,7 +40,7 @@ def laplacian_pyramid(img, max_levels=5, k_size=5, sigma=1, n_channels=3, downsc
     return pyr
 
 class LapLoss(nn.Module):
-    def __init__(self, max_levels=5, k_size=5, sigma=1, n_channels=3, downscale=2, **kwargs):
+    def __init__(self, max_levels=5, k_size=5, sigma=2., n_channels=3, downscale=2, **kwargs):
         super().__init__()
         self.max_levels = max_levels
         self.k_size = k_size
@@ -55,7 +54,7 @@ class LapLoss(nn.Module):
         pyr_target = laplacian_pyramid(target, self.max_levels, self.k_size, self.sigma, self.n_channels, self.downscale)
 
         loss = 0
-        for j, (i, t) in enumerate(zip(pyr_input, pyr_target), 1): 
+        for j, (i, t) in enumerate(zip(pyr_input, pyr_target)): 
             wt = 2 ** (-2 * j)
             loss += wt * torch.mean(torch.abs(i - t))
 
