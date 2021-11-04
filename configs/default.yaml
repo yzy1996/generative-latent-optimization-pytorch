@@ -10,7 +10,7 @@ data:
 model:
   framework: dcgan
   z_dim: 128
-  loss_type: mse
+  loss_type: laplacian
 
   max_levels: 5
   k_size: 5
