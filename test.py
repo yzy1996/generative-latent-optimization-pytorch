@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 
 from models.generator import Generator
-from torchvision.utils import make_grid
+from torchvision.utils import make_grid, save_image
 from PIL import Image
 
 def imsave(filename, array):
@@ -49,8 +49,10 @@ def main(args):
         rec1 = generator(new_sample_z)
         rec2 = generator(inter_z)
 
-    imsave(f'{args.expname}-re-new_sample.png', make_grid(rec1.data.cpu() / 2. + 0.5, nrow=8).numpy().transpose(1, 2, 0))
-    imsave(f'{args.expname}-re-inter.png', make_grid(rec2.data.cpu() / 2. + 0.5, nrow=8).numpy().transpose(1, 2, 0))
+    iiimge = (rec1 / 2. + 0.5)
+    save_image(iiimge, f'test.png')
+    # imsave(f'{args.expname}-re-new_sample.png', make_grid(rec1.data.cpu() / 2. + 0.5, nrow=8).numpy().transpose(1, 2, 0))
+    # imsave(f'{args.expname}-re-inter.png', make_grid(rec2.data.cpu() / 2. + 0.5, nrow=8).numpy().transpose(1, 2, 0))
 
     # imsave(f'new_sample-reproject2.png', make_grid(rec.data.cpu() / 2. + 0.5, nrow=1).numpy().transpose(1, 2, 0))
 
